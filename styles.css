@@ -1,0 +1,13 @@
+.flex-container {
+    display: flex;
+    flex-direction: column;
+    background-color: DodgerBlue;
+    align-items: center;
+    height: 300px;
+    justify-content: space-evenly;
+  }
+  .input-container {
+    align-items: center;
+    justify-content: center;
+    height: 10px;
+  }

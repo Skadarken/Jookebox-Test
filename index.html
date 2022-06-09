@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Audio Player</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./build/airtable.browser.js"></script>
+  </head>
+  <body>
+    <div class="flex-container">
+      <div id="input-container" class="input-container">
+        Name: <input type="text" id="customerEmail" />
+        <button id="enterCustomerEmail" onclick="getPlayList()">Try it</button>
+        <button id="enterCustomerEmail" onclick="playAllTracks()">Play All Songs</button>
+      </div>
+      <div id="audio-container" class="audio-container">
+        <p id="demo"></p>
+      </div>
+    </div>
+    <script>
+      window.onload = function () {
+        var Airtable = require("airtable");
+        var airConfig = Airtable;
+
+        airConfig.configure({
+          endpointUrl: "https://api.airtable.com",
+          apiKey: "keyLNO1o2ew3TQBK8",
+        });
+
+        const base = airConfig.base("appJRETKOD8W9s88X");
+      };
+
+      document
+        .getElementById("enterCustomerEmail")
+        .addEventListener("click", getPlaylist);
+
+      document.getElementById("songs").addEventListener("click", playAllTracks);
+
+      function playAllTracks() {
+        var audioFiles = document.getElementsByClassName("songs");
+        console.log(audioFiles[0].src);
+        var audio = new Audio(audioFiles[0].src);
+
+        audio.src = audioFiles[0];
+        audio.play();
+
+        index = 1;
+        audio.onended = function () {
+          if (index < audioFiles.length) {
+            audio.src = audioFiles[index];
+            audio.play();
+            index++;
+          }
+        };
+      }
+
+      function getPlaylist() {
+        var customerId = document.getElementById("customerEmail").value;
+        document.getElementById("audio-container").innerHTML = "";
+
+        var Airtable = require("airtable");
+        var airConfig = Airtable;
+
+        airConfig.configure({
+          endpointUrl: "https://api.airtable.com",
+          apiKey: "keyLNO1o2ew3TQBK8",
+        });
+
+        const base = airConfig.base("appJRETKOD8W9s88X");
+
+        console.log("Function called");
+        console.log(customerId);
+
+        // Airtable Call
+        base("Customer")
+          .select({
+            view: "Grid view",
+          })
+          .eachPage(
+            function page(customerRecords, fetchNextPage) {
+              // This function (`page`) will get called for each page of records.
+
+              for (const record of customerRecords) {
+                if (customerId === record._rawJson.fields.customerId) {
+                  const playlist = record._rawJson.fields.playlist;
+                  base("Playlist").find(playlist[0], (err, playListRecord) => {
+                    if (err) {
+                      console.error(err);
+                      return;
+                    }
+                    const songList = playListRecord._rawJson.fields.songs;
+                    for (const song of songList) {
+                      base("Songs").find(song, function (err, songRecord) {
+                        if (err) {
+                          console.error(err);
+                          return;
+                        }
+                        console.log("Retrieved Song");
+                        var x = document.createElement("AUDIO");
+                        x.setAttribute(
+                          "src",
+                          `${songRecord._rawJson.fields.attachments[0].url}`
+                        );
+                        x.setAttribute("ended", "nextAudioNode.play();");
+                        x.setAttribute("controls", "controls");
+                        x.setAttribute("class", "songs");
+                        document
+                          .getElementById("audio-container")
+                          .appendChild(x);
+                      });
+                    }
+                  });
+                }
+              }
+
+              fetchNextPage();
+            },
+            function done(err) {
+              if (err) {
+                console.error(err);
+                return;
+              }
+            }
+          );
+
+        // Create Audio Element
+        var x = document.createElement("AUDIO");
+        x.setAttribute(
+          "src",
+          "https://dl.airtable.com/.attachments/2613e858d09a260f92dccb86310eeb6c/bf95e127/04-CheppaveBalamani.mp3?ts=1654774803&userId=usri8Nd7h0cGuLWon&cs=06a84f791c152acb"
+        );
+
+        x.setAttribute("controls", "controls");
+        document.getElementById("audio-container").appendChild(x);
+        // End of Audio Element Creation
+      }
+    </script>
+  </body>
+</html>
